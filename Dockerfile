@@ -1,4 +1,4 @@
-FROM  alpine
+FROM  alpine:3.7
 LABEL maintainer="Myros <myros.net@gmail.com>"
 
 RUN set -ex \
@@ -17,9 +17,15 @@ RUN apk add --update \
   && pip install awscli \
   && rm -rf /var/cache/apk/*
 
+ADD install.sh install.sh
+RUN sh install.sh && rm install.sh
+
+
 VOLUME /backups
 
 ADD s3cfg /root/.s3cfg
+
+ENV SCHEDULE="@daily"
 
 # entrypoint
 ADD entrypoint.sh /entrypoint.sh
@@ -27,7 +33,9 @@ ADD entrypoint.sh /entrypoint.sh
 ADD run.sh run.sh
 ADD backup.sh backup.sh
 
-CMD ["exec /usr/local/bin/go-cron -s \"$SCHEDULE\" -p 80 -- /backup.sh"]
+RUN chmod +x /backup.sh
+
+CMD ["sh", "run.sh"]
 
 HEALTHCHECK --interval=5m --timeout=3s \
   CMD curl -f http://localhost/ || exit 1
