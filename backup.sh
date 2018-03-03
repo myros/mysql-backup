@@ -58,7 +58,7 @@ fi
 # fi
 
 #Proces vars
-MYSQL_HOST_OPTS="-h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -P$MYSQL_PORT  -C $MYSQL_EXTRA_OPTS"
+MYSQL_HOST_OPTS="-h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -P$MYSQL_PORT  -C $MYSQLDUMP_OPTIONS"
 
 #Initialize filename vers and dirs
 BACKUP_DIR=${BACKUP_DIR:-/backups}
@@ -73,10 +73,10 @@ mkdir -p $BACKUP_PATH
 DBS=$(echo $MYSQL_DB | tr ";" "\n")
 
 DB_DONE="Databases: "
-MYSQLDUMP="mysqldump -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -P$MYSQL_PORT $MYSQL_EXTRA_OPTS"
+MYSQLDUMP="mysqldump -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -P$MYSQL_PORT $MYSQLDUMP_OPTIONS"
 
 if [ $MYSQL_DB = "--all-databases" ]; then
-  if [ $SEPARATE_FILES = "1" ]; then
+  if [ $MULTI_FILES = "yes" ]; then
     echo "Creating separate dump of all databases from ${MYSQL_HOST}..."
     databases=`mysql -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -P$MYSQL_PORT -e "SHOW DATABASES;" | grep -Ev "(Database|information_schema|performance_schema)"`
     for db in $databases; do
@@ -88,7 +88,7 @@ if [ $MYSQL_DB = "--all-databases" ]; then
   else
     echo "Creating dump of all databases ==> $BACKUP_PATH/$FILE_NAME"
     FILE_NAME="backup-`date +%H%M%S`.sql.gz"
-    mysqldump -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -P$MYSQL_PORT $MYSQL_EXTRA_OPTS --all-databases > $BACKUP_PATH/$FILE_NAME
+    mysqldump -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -P$MYSQL_PORT $MYSQLDUMP_OPTIONS --all-databases > $BACKUP_PATH/$FILE_NAME
     DB_DONE="All databases"
   fi
 else
@@ -96,7 +96,7 @@ else
     #Create dump
     echo "Creating dump ${db} ==> $BACKUP_PATH/$FILE_NAME"
     FILE_NAME=${db}-`date +%H%M%S`.sql.gz
-    mysqldump -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -P$MYSQL_PORT $MYSQL_EXTRA_OPTS  $db > $BACKUP_PATH/$FILE_NAME
+    mysqldump -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -P$MYSQL_PORT $MYSQLDUMP_OPTIONS  $db > $BACKUP_PATH/$FILE_NAME
 
     echo "mysqldump $MYSQL_HOST_OPTS $db | gzip > $BACKUP_PATH/$FILE_NAME"
     DB_DONE="$DB_DONE$db; "

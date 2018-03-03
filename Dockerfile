@@ -22,6 +22,8 @@ VOLUME /backups
 ADD s3cfg /root/.s3cfg
 
 ENV SCHEDULE="@daily"
+ENV MYSQLDUMP_OPTIONS --quote-names --quick --add-drop-table --add-locks --allow-keywords --disable-keys --extended-insert --single-transaction --create-options --comments --net_buffer_length=16384
+ENV MULTI_FILES no
 
 # entrypoint
 ADD entrypoint.sh /entrypoint.sh
