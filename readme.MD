@@ -43,6 +43,7 @@ MYSQL_DB | the database name(s) to dump. If you want to use multiple databases, 
 
 Variable | Description
 --- | ---
+SEPARATE_FILES | separate backup files for --all-databases value
 MYSQL_EXTRA_OPTS | the extra options to pass to pg_dump command
 SCHEDULE | the interval of cron job to run pg_dump. `@daily` by default, which is every day at 00:00.
 

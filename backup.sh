@@ -84,17 +84,18 @@ if [ $MYSQL_DB = "--all-databases" ]; then
       echo "Creating dump ${db} ==> $BACKUP_PATH/$FILE_NAME"
       $MYSQLDUMP --databases $db | gzip > "$BACKUP_PATH/$FILE_NAME"
       # $MYSQLDUMP --force --opt --user=$MYSQL_USER -p$MYSQL_PASSWORD --databases $db | gzip > "$BACKUP_DIR/mysql/$db.gz"
+      DB_DONE="$DB_DONE$db; "
     done
   else
-    echo "Creating dump of all databases from ${MYSQL_HOST}..."
+    echo "Creating dump of all databases ==> $BACKUP_PATH/$FILE_NAME"
     FILE_NAME="backup-`date +%H%M%S`.sql.gz"
     mysqldump -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -P$MYSQL_PORT $MYSQL_EXTRA_OPTS --all-databases > $BACKUP_PATH/$FILE_NAME
+    DB_DONE="All databases"
   fi
-  DB_DONE="All databases"
 else
   for db in $DBS; do
     #Create dump
-    echo "Creating dump of ${db} database from ${MYSQL_HOST}..."
+    echo "Creating dump ${db} ==> $BACKUP_PATH/$FILE_NAME"
     FILE_NAME=${db}-`date +%H%M%S`.sql.gz
     mysqldump -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -P$MYSQL_PORT $MYSQL_EXTRA_OPTS  $db > $BACKUP_PATH/$FILE_NAME
 
