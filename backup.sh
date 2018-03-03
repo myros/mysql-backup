@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 
@@ -25,33 +25,31 @@ post_to_slack() {
   curl -s -d "payload={\"text\": \"${SLACK_ICON} ${SLACK_MESSAGE}\"}" ${SLACK_URL}
 }
 
+echo "Begin..."
 
-if [ -z "${PG_HOST}" ]; then
-  echo "You need to set the PG_HOST environment variable."
+if [ -z "${MYSQL_HOST}" ]; then
+  echo "You need to set the MYSQL_HOST environment variable."
   exit 1
 fi
 
-if [ -z "${PG_DB}" ]; then
-  echo "You need to set the PG_DB environment variable."
+if [ -z "${MYSQL_DB}" ]; then
+  MYSQL_DB='--all-databases'
+fi
+
+if [ -z "${MYSQL_USER}" ]; then
+  echo "You need to set the MYSQL_USER environment variable."
   exit 1
 fi
 
-if [ -z "${PG_USER}" ]; then
-  echo "You need to set the PG_USER environment variable."
+if [ -z "${MYSQL_PASSWORD}" ]; then
+  echo "You need to set the MYSQL_PASSWORD environment variable."
   exit 1
 fi
 
-if [ -z "${PG_PASSWORD}" ]; then
-  echo "You need to set the PG_PASSWORD environment variable."
+if [ -z "${MYSQL_PORT}" ]; then
+  echo "You need to set the MYSQL_PORT environment variable."
   exit 1
 fi
-
-if [ -z "${PG_PORT}" ]; then
-  echo "You need to set the PG_PORT environment variable."
-  exit 1
-fi
-
-# fi
 
 # # CHECK S3 UPLOAD
 # if [ -z "$S3_ACCESS_KEY" -o -z "$S3_SECRET_KEY" -o -z "$S3_BUCKET" ]; then
@@ -60,11 +58,10 @@ fi
 # fi
 
 #Proces vars
-export PGPASSWORD=$PG_PASSWORD
-POSTGRES_HOST_OPTS="-h $PG_HOST -p $PG_PORT -U $PG_USER $PG_EXTRA_OPTS"
+MYSQL_HOST_OPTS="-h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -P$MYSQL_PORT  -C $MYSQL_EXTRA_OPTS"
 
 #Initialize filename vers and dirs
-BACKUP_DIR="/backups"
+BACKUP_DIR=${BACKUP_DIR:-/backups}
 
 YEAR=`date +%Y`
 MONTH=`date +%m`
@@ -73,23 +70,32 @@ BACKUP_PATH="$BACKUP_DIR/$YEAR/$MONTH/$DAY"
 mkdir -p $BACKUP_PATH
 
 # getting database list
-DBS=$(echo $PG_DB | tr ";" "\n")
+DBS=$(echo $MYSQL_DB | tr ";" "\n")
 
-declare -a DB_DONE
+DB_DONE="Databases: "
 
-for db in $DBS; do
-  #Create dump
-  echo "Creating dump of ${db} database from ${PG_HOST}..."
-  FILE_NAME=${db}-`date +%H%M%S`.sql.gz
-  echo "pg_dump $POSTGRES_HOST_OPTS $db > $BACKUP_PATH/$FILE_NAME"
-  pg_dump $POSTGRES_HOST_OPTS $db > $BACKUP_PATH/$FILE_NAME
-  DB_DONE+="$db; "
-done
+if [ -n $DB_NAME = '--all-databases' ]; then
+  echo "Creating dump of all databases from ${MYSQL_HOST}..."
+  FILE_NAME="backup-`date +%H%M%S`.sql.gz"
+  mysqldump -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -P$MYSQL_PORT $MYSQL_EXTRA_OPTS --all-databases > $BACKUP_PATH/$FILE_NAME
+  DB_DONE="All databases"
+else
+  for db in $DBS; do
+    #Create dump
+    echo "Creating dump of ${db} database from ${MYSQL_HOST}..."
+    FILE_NAME=${db}-`date +%H%M%S`.sql.gz
+    mysqldump -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD -P$MYSQL_PORT $MYSQL_EXTRA_OPTS  $db > $BACKUP_PATH/$FILE_NAME
+
+    echo "mysqldump $MYSQL_HOST_OPTS $db > $BACKUP_PATH/$FILE_NAME"
+    # mysqldump MYSQL_HOST_OPTS $db | gzip > $BACKUP_PATH/$FILE_NAME
+    DB_DONE="$DB_DONE$db; "
+  done
+fi
 
 if [ ! -z $SLACK_HOST ] && [ ! -z $SLACK_CHANNEL ]; then
   echo "Notifying slack..."
   CURRENT_DATE=`date +%Y.%m.%d`
-  MESSAGE=${SLACK_MESSAGE:-Database backup done ($CURRENT_DATE) ($DB_DONE)}
+  MESSAGE=${SLACK_MESSAGE:-MYSQL Database backup done ($CURRENT_DATE) $DB_DONE}
   echo $MESSAGE
   post_to_slack "$MESSAGE" "INFO"
 fi

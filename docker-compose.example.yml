@@ -2,24 +2,23 @@
 version: "2"
 
 services:
-  pgbackups:
-    image: postgres-backup
+  backups:
+    image: myros/mysql-backup
     volumes:
-      - ./backups/pg:/backups
+      - ~/backups/mysql:/backups
 
     environment:
-      DUMPPREFIX: pg_
-      PG_USER: docker
-      PG_PASSWORD: docker
-      PG_PORT: 5432
-      PG_HOST: postgres
-      PG_DB: database1; database2
-      PG_EXTRA_OPTS: "-w -Fc"
-      SCHEDULE: "@every 6h"
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: docker
+      MYSQL_PORT: 3306
+      MYSQL_HOST: mysql
+      # MYSQL_DB: wp_test_1; wp_test_2
+      MYSQL_EXTRA_OPTS: --opt -v
+      SCHEDULE: "@every 1h"
       SLACK_CHANNEL: "backups"
       SLACK_HOST: "https://hooks.slack.com/services/YOUR_DATA"
 
 networks:
   default:
     external:
-      name: NAME_OF_YOUR_POSTGRES_NETWORK
+      name: maginfo
