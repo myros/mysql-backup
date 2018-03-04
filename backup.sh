@@ -27,6 +27,9 @@ post_to_slack() {
 
 echo "Begin..."
 
+# INIT VARS
+SLACK="MYSQL backup started at `date +%m.%d.` `date +%H:%M` \n"
+
 if [ -z "${MYSQL_HOST}" ]; then
   echo "You need to set the MYSQL_HOST environment variable."
   exit 1
@@ -103,13 +106,16 @@ else
   done
 fi
 
+# post slack message
 if [ ! -z $SLACK_HOST ] && [ ! -z $SLACK_CHANNEL ]; then
   echo "Notifying slack..."
   CURRENT_DATE=`date +%Y.%m.%d`
-  MESSAGE=${SLACK_MESSAGE:-MYSQL Database backup done ($CURRENT_DATE) $DB_DONE}
+  CURRENT_TIME=`date +%H:%M`
+  SLACK="$SLACK\n${DB_DONE}"
+  SLACK="$SLACK\nMYSQL Database backup done at ($CURRENT_TIME)"
+  MESSAGE=${SLACK_MESSAGE:-$SLACK}
   echo $MESSAGE
   post_to_slack "$MESSAGE" "INFO"
 fi
 
-
-echo "SQL backup uploaded successfully"
+echo "SQL backup done successfully"

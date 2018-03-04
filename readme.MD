@@ -43,8 +43,8 @@ MYSQL_DB | the database name(s) to dump. If you want to use multiple databases, 
 
 Variable | Description
 --- | ---
-SEPARATE_FILES | separate backup files for --all-databases value
-MYSQL_EXTRA_OPTS | the extra options to pass to pg_dump command
+MULTI_FILES | separate backup files for --all-databases value
+MYSQLDUMP_OPTIONS | the extra options to pass to pg_dump command
 SCHEDULE | the interval of cron job to run pg_dump. `@daily` by default, which is every day at 00:00.
 
 ### Slack variables (optional)
@@ -72,7 +72,7 @@ services:
       MYSQL_PORT: 3306
       MYSQL_HOST: mysql
       # MYSQL_DB: wp_test_1; wp_test_2
-      MYSQL_EXTRA_OPTS: --opt -v
+      MYSQLDUMP_OPTIONS: --opt -v
       SCHEDULE: "@every 1h"
       SLACK_CHANNEL: "backups"
       SLACK_HOST: "https://hooks.slack.com/services/YOUR_DATA"
